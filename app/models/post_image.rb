@@ -1,16 +1,21 @@
 class PostImage < ApplicationRecord
-  # ActiveStorageで画像アップロード機能
+
   has_one_attached :image
-
-  # 投稿はユーザーと紐づいている（1:N の N 側）
   belongs_to :user
-
-  # 画像が存在しない場合にデフォルト画像を返すメソッド
+  has_many :post_comments, dependent: :destroy
+  has_many :favorites, dependent: :destroy
+  
   def get_image
-    if image.attached?
-      image
-    else
-      'no_image.jpg' # app/assets/images/no_image.jpg を asset pipeline 経由で表示
+    unless image.attached?
+      file_path = Rails.root.join('app/assets/images/no_image.jpg')
+      image.attach(io: File.open(file_path), filename: 'default-image.jpg', content_type: 'image/jpeg')
     end
+    image
   end
+
+
+  def favorited_by?(user)
+    favorites.exists?(user_id: user.id)
+  end
+  
 end
